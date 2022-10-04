@@ -1,6 +1,7 @@
 # This will import set_file() and read_byte() functions
 # To read a file you must first call set_file("name_of_file"),
 # Then you can call read_byte() to get the bytes of the file 1 by 1
+import readfile
 from readfile import *
 
 ### The Protocol ###
@@ -49,18 +50,64 @@ from readfile import *
 def execute(program_file):
     result = []
     # set file
+    set_file(program_file)
     # read header
-    # get number of operations
-    # for num of operations:
-    ### get operation code
-    ### run operation
-    ### push result to list
+    if read_bytes(4) == "3141face":
+        # get number of operations
+        # for num of operations:
+        number_of_operations = int(read_bytes(2), 16)
+        i = 0
+        while i < number_of_operations:
+            ### get operation code
+            operation = read_bytes(1)
+            ### run operation
+            if operation == "1":
+                operand_1 = int(read_bytes(2), 16)
+                operand_2 = int(read_bytes(2), 16)
+                ### push result to list
+                result.append(operand_1 + operand_2)
+            if operation == "2":
+                operand_1 = int(read_bytes(2), 16)
+                operand_2 = int(read_bytes(2), 16)
+                ### push result to list
+                result.append(operand_1 - operand_2)
+            if operation == "3":
+                operand_1 = int(read_bytes(2), 16)
+                operand_2 = int(read_bytes(2), 16)
+                ### push result to list
+                result.append(operand_1 * operand_2)
+            if operation == "4":
+                operand_1 = int(read_bytes(2), 16)
+                operand_2 = int(read_bytes(2), 16)
+                ### push result to list
+                result.append(operand_1 / operand_2)
+            if operation == "5":
+                data = str(read_byte(), 'UTF-8')
+                to_add = ""
+                while data != "\n":
+                    to_add += data
+                    data = str(read_byte(), 'UTF-8')
+                ### push result to list
+                result.append(to_add + "\n")
+            i += 1
     return result
 
+
+def read_bytes(x):
+    i = 0
+    byte = ""
+    while i < x:
+        y = hex(ord(read_byte()))
+        byte += y[2:]
+        i += 1
+
+    return byte
 
 # if you run `python interpreter.py`
 # then the execute function will get run with program1
 # however this line does not run when this file
 # is imported by another .py file (like grader.py)
+
+
 if __name__ == '__main__':
-    execute('programs/program1')
+    execute('programs/program4')
