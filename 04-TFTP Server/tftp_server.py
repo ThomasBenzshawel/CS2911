@@ -82,8 +82,6 @@ def start_server(host, port):
                 filename += bytes.decode(reading[i].to_bytes(1, 'big'))
                 i += 1
 
-        print(opcode[1])
-        print(filename)
         listen = False
 
         # Determine the request type and preapre to read from a file
@@ -95,26 +93,18 @@ def start_server(host, port):
                 else:
                     sendingdata = b'\x00' + b'\x03' + i.to_bytes(2, 'big') + get_file_block(filename, i)
                 rec_socket.sendto(sendingdata, (host, p))
-                print(sendingdata)
                 response_data, (h2, p2) = rec_socket.recvfrom(MAX_UDP_PACKET_SIZE)
+                # get ACK (if the ack is not for the correct block number you may need to resend a previous block)
                 if(response_data[1] == 4):
                     i += 1
                 if(response_data[1] == 5):
                     print(response_data)
         else:
             rec_socket.sendto(b'\x00\x05\x00\x01' + "file not found".encode() + b'\x00', (host, p))
+
+        rec_socket.close()
         listen = False
 
-
-
-
-
-
-
-    # while not done sending blocks or no errors
-        # send block using .sendto(bytesToSend, address)
-        # get ACK (if the ack is not for the correct block number you may need to resend a previous block)
-    # close your sockets
 
 def get_n_bytes(com, n):
     data = b''
