@@ -3,7 +3,7 @@ import os
 import math
 
 TFTP_PORT = 69
-TFTP_HOST = 'localhost'
+TFTP_HOST = '192.168.1.180'
 TFTP_BLOCK_SIZE = 512
 MAX_UDP_PACKET_SIZE = 65536
 
@@ -92,8 +92,8 @@ def start_server(host, port):
                     sendingdata = b'\x00' + b'\x03' + b'\x00' + i.to_bytes(1, 'big') + get_file_block(filename, i)
                 else:
                     sendingdata = b'\x00' + b'\x03' + i.to_bytes(2, 'big') + get_file_block(filename, i)
-                rec_socket.sendto(sendingdata, (host, p))
-                response_data, (h2, p2) = rec_socket.recvfrom(MAX_UDP_PACKET_SIZE)
+                rec_socket.sendto(sendingdata, (h, p))
+                response_data, (h, p) = rec_socket.recvfrom(MAX_UDP_PACKET_SIZE)
                 # get ACK (if the ack is not for the correct block number you may need to resend a previous block)
                 if(response_data[1] == 4):
                     i += 1

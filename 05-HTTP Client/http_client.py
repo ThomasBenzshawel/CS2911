@@ -42,14 +42,75 @@ def do_http_exchange(host, port, resource, file_name):
     :rtype: int
     """
     # Open a tcp socket
+    sock = socket(AF_INET, SOCK_STREAM)
+    print("connected")
     # Connect the socket to the host on the given port
+    sock.connect((host, port))
     # Create a request as a bytes object
+    sock.send(b'GET / HTTP/1.1\r\nHost:' + host + b'\r\n\r\n')
     # Send the request to the host
     # Receive the response for the host
+    first_header = sock.recv(12)
+    print(first_header.decode())
         ## Get the first line of the header first
+    code = first_header[9:12]
         ## Extract the message code (e.g. 404, 200)
         ## If 200 proceeed to read the rest of the header lines
-    # If the header contains the Content-Length, then
+    if(code == b'200'):
+        total_header = ""
+        total = ""
+        header_not_read = True
+        while(header_not_read):
+            response = sock.recv(1)
+            next_reponse = sock.recv(1)
+            third_response = sock.recv(1)
+            fourth_response = sock.recv(1)
+
+            total_header += response.decode()
+            total_header += next_reponse.decode()
+            total_header += third_response.decode()
+            total_header += fourth_response.decode()
+
+            if((response == b'\r') & (next_reponse == b'\n') &
+                    (third_response == b'\r') & (fourth_response == b'\n')):
+                header_not_read = False
+    else:
+        print(code.decode() + "Bad gateway")
+
+    temp_string = ""
+    found_encoding = False
+    found_length = False
+    print(total_header)
+    for x in total_header:
+        if (x != ':') and (x != '\n') and (found_encoding == False) and (found_length == False):
+            temp_string += x
+        elif x == ':' or x == '\n':
+            if(temp_string == "Transfer-Encoding"):
+                found_encoding = True
+                ##TODO
+
+            else:
+                temp_string = ""
+
+    if(found_encoding):
+        temp_bytes = ""
+        current_bytes = b''
+        while(current_bytes != b'\r'):
+            temp_bytes += current_bytes.decode()
+            current_bytes = sock.recv(1)
+        chunk_length = 0
+        i = 0
+        while(i < len(temp_bytes)):
+            chunk_length += (int(temp_bytes[i])) * (16 ** i)
+            i += 1
+        total = sock.recv(chunk_length).decode()
+        print(total)
+
+    f = open("output.txt", "a")
+    f.write(total)
+    f.close()
+
+    ## If the header contains the Content-Length, then
         ## Read the number of bytes given by the content length value
         ## save the bytes to a file given by file_name
     # Else if the header contains the Transfer-Encoding with value chunks
@@ -58,7 +119,7 @@ def do_http_exchange(host, port, resource, file_name):
         ## Decode the chunks as ASCII
         ## Write the ASCII to a file given by file_name
 
-    return 500  # Replace this "server error" with the actual status code
+    return int.from_bytes(code, 'big')  # Replace this "server error" with the actual status code
 
 if __name__ == '__main__':
     """
