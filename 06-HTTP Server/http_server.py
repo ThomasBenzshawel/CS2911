@@ -70,11 +70,54 @@ def get_file_size(file_path):
     return file_size
 
 def handle_request(request_socket):
+    i = 0
     # Get the request line
+    request_line = ""
+    current_byte = b''
+    while current_byte != b'\n':
+        current_byte = request_socket.recv(1)
+        request_line += current_byte.decode()
+
+    print(request_line)
     # Get the remaining header lines
+    seen_first_r = False
+    seen_first_n = False
+    seen_second_r = False
+    seen_second_n = False
+
+    total_response = ""
+
+    while not seen_second_n:
+        response = request_socket.recv(1)
+        total_response += response.decode()
+        if response == b'\r' and seen_first_r == False:
+            seen_first_r = True
+        elif seen_first_r and response == b'\n':
+            seen_first_n = True
+
+        if seen_first_r and seen_first_n and response == b'\r':
+            seen_second_r = True
+        elif seen_first_r and seen_first_n and response != b'\n':
+            seen_first_r = False
+            seen_first_n = False
+
+        if seen_first_r and seen_first_n and seen_second_r and response == b'\n':
+            seen_second_n = True
     # if request is "/"
+    print(total_response)
+    if(request_line[4] == '/'):
+        i = 4
+        total_request = ""
+        while(request_line[i] != " "):
+            total_request += request_line[i]
+            i += 1
+
         # build response line
+        response_line = "HTTP/1.1 200 \r\n".encode()
+        response_line += " OK\r\n".encode()
+        request_socket.send(response_line)
         # build response headers
+
         # get index.html as bytes
         # send response, headers, and index.html
     # if request matches any file in current dir

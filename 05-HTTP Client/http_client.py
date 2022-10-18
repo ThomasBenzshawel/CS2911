@@ -59,21 +59,27 @@ def do_http_exchange(host, port, resource, file_name):
     if(code == b'200'):
         total_header = ""
         total = ""
-        header_not_read = True
-        while(header_not_read):
+        seen_first_r = False
+        seen_first_n = False
+        seen_second_r = False
+        seen_second_n = False
+
+        while not seen_second_n:
             response = sock.recv(1)
-            next_reponse = sock.recv(1)
-            third_response = sock.recv(1)
-            fourth_response = sock.recv(1)
-
             total_header += response.decode()
-            total_header += next_reponse.decode()
-            total_header += third_response.decode()
-            total_header += fourth_response.decode()
+            if response == b'\r' and seen_first_r == False:
+                seen_first_r = True
+            elif seen_first_r and response == b'\n':
+                seen_first_n = True
 
-            if((response == b'\r') & (next_reponse == b'\n') &
-                    (third_response == b'\r') & (fourth_response == b'\n')):
-                header_not_read = False
+            if seen_first_r and seen_first_n and response == b'\r':
+                seen_second_r = True
+            elif seen_first_r and seen_first_n and response != b'\n':
+                seen_first_r = False
+                seen_first_n = False
+
+            if seen_first_r and seen_first_n and seen_second_r and response == b'\n':
+                seen_second_n = True
     else:
         print(code.decode() + "Bad gateway")
 
