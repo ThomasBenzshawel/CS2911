@@ -63,6 +63,8 @@ def get_file_size(file_path):
     :rtype: int or None
     """
 
+    ##Syncing repository
+
     # Initially, assume file does not exist
     file_size = None
     if os.path.isfile(file_path):
