@@ -47,7 +47,8 @@ def do_http_exchange(host, port, resource, file_name):
     # Connect the socket to the host on the given port
     sock.connect((host, port))
     # Create a request as a bytes object
-    sock.send(b'GET / HTTP/1.1\r\nHost:' + host + b'\r\n\r\n')
+    request = b'GET ' + resource + b' HTTP/1.1\r\nHost:' + host + b'\r\n\r\n'
+    sock.send(request)
     # Send the request to the host
     # Receive the response for the host
     first_header = sock.recv(12)
@@ -66,7 +67,7 @@ def do_http_exchange(host, port, resource, file_name):
 
         while not seen_second_n:
             response = sock.recv(1)
-            total_header += response.decode()
+            total_header += response.decode('ascii')
             if response == b'\r' and seen_first_r == False:
                 seen_first_r = True
             elif seen_first_r and response == b'\n':
@@ -86,35 +87,65 @@ def do_http_exchange(host, port, resource, file_name):
     temp_string = ""
     found_encoding = False
     found_length = False
+
+    content_length = 0
+
+    char_location = 0
     print(total_header)
     for x in total_header:
-        if (x != ':') and (x != '\n') and (found_encoding == False) and (found_length == False):
+        if (x != ':') and (x != '\n') and ((found_encoding == False) and (found_length == False)):
             temp_string += x
+            char_location += 1
         elif x == ':' or x == '\n':
             if(temp_string == "Transfer-Encoding"):
                 found_encoding = True
-                ##TODO
+                temp_string = ""
 
+            elif(temp_string == "Content-Length"):
+                found_length = True
+                temp_length_string = ""
+                char_location += 1
+                while temp_length_string[-2:] != '\r\n':
+                    temp_length_string += total_header[char_location]
+                    char_location += 1
+                temp_length_string = temp_length_string[1:len(temp_length_string) - 2]
+                content_length = int(temp_length_string, 16)
+                temp_string = ""
             else:
+                char_location += 1
                 temp_string = ""
 
     if(found_encoding):
-        temp_bytes = ""
-        current_bytes = b''
-        while(current_bytes != b'\r'):
-            temp_bytes += current_bytes.decode()
-            current_bytes = sock.recv(1)
-        chunk_length = 0
-        i = 0
-        while(i < len(temp_bytes)):
-            chunk_length += (int(temp_bytes[i])) * (16 ** i)
-            i += 1
-        total = sock.recv(chunk_length).decode()
-        print(total)
+        chunk_length = 1
+        total = b''
+        while chunk_length != 0:
+            temp_bytes = sock.recv(2)
+            while temp_bytes[-2:] != b'\r\n':
+                temp_bytes += sock.recv(1)
+            chunk_length = int(temp_bytes[:-2].decode('ascii'), 16)
+            data = b''
+            while len(data) < chunk_length:
+                data += sock.recv(1)
+            print(sock.recv(2) == b'\r\n')
+            total += data
 
-    f = open("output.txt", "a")
-    f.write(total)
-    f.close()
+        f = open(file_name, "wb")
+        print(total)
+        f.write(total)
+        f.close()
+
+    if (found_length):
+        total = b''
+        total += sock.recv(content_length)
+
+        f = open(file_name, "wb")
+        print(total)
+        f.write(total)
+        f.close()
+
+
+
+
 
     ## If the header contains the Content-Length, then
         ## Read the number of bytes given by the content length value

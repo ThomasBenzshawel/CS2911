@@ -214,7 +214,7 @@ def compute_checksum(string):
     total %= 0x8000  # Guarantees checksum is only 4 hex digits
     # How many bytes is that?
     #
-    # Also guarantees that that the checksum will
+    # Also guarantees that the checksum will
     # always be less than the modulus.
     return total
 
@@ -223,19 +223,81 @@ def compute_checksum(string):
 # Do not modify code above this line
 # ---------------------------------------
 
-# Remeber to use the named constants as you write your code
+# Remember to use the named constants as you write your code
 # MAX_PRIME = 0b11111111  The maximum value a prime number can have
 # MIN_PRIME = 0b11000001  The minimum value a prime number can have
 # PUBLIC_EXPONENT = 17  The default public exponent
 
+def generate_primes(l, h):
+    assert l >= 1
+    assert h > l
+    primes = []
+    for x in range(l, h + 1):
+        prime = True
+        for y in range(2, x):
+            if x % y == 0:
+                prime = False
+                break
+        if prime:
+            primes.append(x)
+    return primes
+
+def gcd(p, q):
+    while q != 0:
+        p, q = q, p % q
+    return p
+
+
+x, y = 0, 1
+def gcdExtended(a, b):
+    global x, y
+
+    # Base Case
+    if (a == 0):
+        x = 0
+        y = 1
+        return b
+    # To store results of recursive call
+    gcd = gcdExtended(b % a, a)
+    x1 = x
+    y1 = y
+
+    # Update x and y using results of recursive
+    # call
+    x = y1 - (b // a) * x1
+    y = x1
+
+    return gcd
+
+def find_e(co_prime):
+    i = 2
+    while i < co_prime:
+        if gcd(i, co_prime) == 1:
+            return i
+        i += 1
+    return -1
+
+def modInverse(A, M):
+    g = gcdExtended(A, M)
+
+    return (x % M + M) % M
 
 def create_keys():
     """
     Create the public and private keys.
-
     :return: the keys as a three-tuple: (e,d,n)
     """
-    pass
+    possibleKeys = generate_primes(1, 255)
+    length = possibleKeys.__len__()
+    first_key = possibleKeys[random.randint(0, length -1)]
+    second_key = possibleKeys[random.randint(0, length -1)]
+
+    co_prime = math.lcm(first_key - 1, second_key -1)
+    n = first_key * second_key
+    e = PUBLIC_EXPONENT
+    d = modInverse(e, co_prime)
+    
+    return (e, d, n)
 
 
 def apply_key(key, m):
@@ -250,7 +312,9 @@ def apply_key(key, m):
              if given the public key and a message, encrypts the message
              and returns the ciphertext.
     """
-    pass
+    x, n = key
+
+    return pow(m, x) % n
 
 
 def break_key(pub):
@@ -264,7 +328,25 @@ def break_key(pub):
     :param pub: a tuple containing the public key (e,n)
     :return: a tuple containing the private key (d,n)
     """
-    pass
+    e, n = pub
+    n = n
+    p_q_not_found = True
+    p = 0
+    q = 0
+
+    i = 2
+    # take n and divide it by and increasing i until n % i equals 0
+    while p_q_not_found:
+        if n % i == 0:
+            p = i
+            q = n // p
+            p_q_not_found = False
+        i += 1
+
+    co_prime = math.lcm(p - 1, q - 1)
+    d = modInverse(e, co_prime)
+
+    return d, n
 
 
 if __name__ == "__main__":
