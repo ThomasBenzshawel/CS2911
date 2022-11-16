@@ -1,7 +1,7 @@
-from socket import *
 import struct
 import time
-import sys
+import socket
+from socket import *
 
 # Port number definitions
 # (May have to be adjusted if they collide with ports in use by other programs/services.)

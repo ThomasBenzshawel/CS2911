@@ -433,7 +433,8 @@ def tcp_receive(listen_on, listen_port):
             decode_bytes = c.recv(1)
             encrypted += decode_bytes
             i += 1
-
+        print(length)
+        print(encrypted)
         message = ""
         for i in range(0, len(encrypted), 4):
             enc_string = encrypted[i: i + 4]
@@ -468,6 +469,7 @@ def tcp_send(server_host, server_port):
     print('tcp_send: dst_host="{0}", dst_port={1}'.format(server_host, server_port))
     tcp_socket = socket(AF_INET, SOCK_STREAM)
     tcp_socket.connect((server_host, server_port))
+
     n_length = int.from_bytes(tcp_socket.recv(2), "big")
     n = int.from_bytes(tcp_socket.recv(n_length), "big")
 
