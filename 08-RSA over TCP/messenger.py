@@ -9,17 +9,17 @@ MIN_PRIME = 0b11000001  # The minimum value a prime number can have
 PUBLIC_EXPONENT = 17  # The default public exponent
 TCP_PORT = 12100
 
+
 # Address of the 'other' ('server') host that should be connected to for 'send' operations.
 # When connecting on one system, use 'localhost'
 # When 'sending' to another system, use its IP address (or DNS name if it has one)
 # OTHER_HOST = '155.92.x.x'
 
 
-
 def main():
     """Provide the user with a variety of encryption-related actions"""
     run = True
-    while(run):
+    while (run):
         # Get chosen operation from the user.
         action = input(
             "Select an option from the menu below:\n"
@@ -61,7 +61,6 @@ def get_public_key(key_pair):
     """
     Pulls the public key out of the tuple structure created by
     create_keys()
-
     :param key_pair: (e,d,n)
     :return: (e,n)
     """
@@ -73,7 +72,6 @@ def get_private_key(key_pair):
     """
     Pulls the private key out of the tuple structure created by
     create_keys()
-
     :param key_pair: (e,d,n)
     :return: (d,n)
     """
@@ -84,7 +82,6 @@ def get_private_key(key_pair):
 def create_keys_interactive():
     """
     Create new public keys
-
     :return: the private key (d, n) for use by other interactive methods
     """
 
@@ -154,7 +151,7 @@ def decrypt_message_interactive(priv=None):
         priv = enter_key_interactive("private")
     message = ""
     for i in range(0, len(encrypted), 4):
-        enc_string = encrypted[i : i + 4]
+        enc_string = encrypted[i: i + 4]
         enc = int(enc_string, 16)
         dec = apply_key(priv, enc)
         if dec >= 0 and dec < 256:
@@ -182,7 +179,6 @@ def break_key_interactive():
 def enter_public_key_interactive():
     """
     Prompt user to enter the public modulus.
-
     :return: the tuple (e,n)
     """
 
@@ -195,7 +191,6 @@ def enter_public_key_interactive():
 def enter_key_interactive(key_type):
     """
     Prompt user to enter the exponent and modulus of a key
-
     :param key_type: either the string 'public' or 'private' -- used to prompt the user on how
                      this key is interpretted by the program.
     :return: the tuple (e,n)
@@ -210,18 +205,14 @@ def enter_key_interactive(key_type):
 def compute_checksum(string):
     """
     Compute simple hash
-
     Given a string, compute a simple hash as the sum of characters
     in the string.
-
     (If the sum goes over sixteen bits, the numbers should "wrap around"
     back into a sixteen bit number.  e.g. 0x3E6A7 should "wrap around" to
     0xE6A7)
-
     This checksum is similar to the internet checksum used in UDP and TCP
     packets, but it is a two's complement sum rather than a one's
     complement sum.
-
     :param str string: The string to hash
     :return: the checksum as an integer
     """
@@ -260,6 +251,7 @@ def generate_primes(l, h):
             primes.append(x)
     return primes
 
+
 def gcd(p, q):
     while q != 0:
         p, q = q, p % q
@@ -267,6 +259,8 @@ def gcd(p, q):
 
 
 x, y = 0, 1
+
+
 def gcdExtended(a, b):
     global x, y
 
@@ -287,6 +281,7 @@ def gcdExtended(a, b):
 
     return gcd
 
+
 def find_e(co_prime):
     i = 2
     while i < co_prime:
@@ -295,10 +290,12 @@ def find_e(co_prime):
         i += 1
     return -1
 
+
 def modInverse(A, M):
     g = gcdExtended(A, M)
 
     return (x % M + M) % M
+
 
 def create_keys():
     """
@@ -307,15 +304,16 @@ def create_keys():
     """
     possibleKeys = generate_primes(1, 255)
     length = possibleKeys.__len__()
-    first_key = possibleKeys[random.randint(0, length -1)]
-    second_key = possibleKeys[random.randint(0, length -1)]
+    first_key = possibleKeys[random.randint(0, length - 1)]
+    second_key = possibleKeys[random.randint(0, length - 1)]
 
-    co_prime = math.lcm(first_key - 1, second_key -1)
+    co_prime = math.lcm(first_key - 1, second_key - 1)
     n = first_key * second_key
     e = PUBLIC_EXPONENT
     d = modInverse(e, co_prime)
-    
+
     return (e, d, n)
+
 
 def find_byte_size(int):
     if 0 < int < 255:
@@ -323,12 +321,11 @@ def find_byte_size(int):
     else:
         return 2
 
+
 def apply_key(key, m):
     """
     Apply the key, given as a tuple (e,n) or (d,n) to the message.
-
     This can be used both for encryption and decryption.
-
     :param tuple key: (e,n) or (d,n)
     :param int m: the message as a number 1 < m < n (roughly)
     :return: the message with the key applied. For example,
@@ -344,10 +341,8 @@ def break_key(pub):
     """
     Break a key.  Given the public key, find the private key.
     Factorizes the modulus n to find the prime numbers p and q.
-
     You can follow the steps in the "optional" part of the in-class
     exercise.
-
     :param pub: a tuple containing the public key (e,n)
     :return: a tuple containing the private key (d,n)
     """
@@ -371,13 +366,16 @@ def break_key(pub):
 
     return d, n
 
+
 def send_message():
     OTHER_HOST = input("enter the target ip address: ")
     tcp_send(OTHER_HOST, TCP_PORT)
 
+
 def recv_message():
     LISTEN_ON_INTERFACE = input("Listen on target interface: ")
     tcp_receive(LISTEN_ON_INTERFACE, TCP_PORT)
+
 
 # Port number definitions
 # (May have to be adjusted if they collide with ports in use by other programs/services.)
@@ -394,7 +392,6 @@ def tcp_receive(listen_on, listen_port):
       - Receive a message, saving it to a text-file (1.txt for first file, 2.txt for second file, etc.)
       - Send a single-character response 'A' to indicate that the upload was accepted.
     - Close data connection.
-
     :param: int listen_port: Port number on the server to listen on
     """
     print('tcp_receive (server): listen_port={0}'.format(listen_port))
@@ -424,7 +421,6 @@ def tcp_receive(listen_on, listen_port):
 
         length = int.from_bytes(data, 'big', signed=True)
 
-
         f = open("output.txt", "a")
 
         i = 0
@@ -433,8 +429,7 @@ def tcp_receive(listen_on, listen_port):
             decode_bytes = c.recv(1)
             encrypted += decode_bytes
             i += 1
-        print(length)
-        print(encrypted)
+
         message = ""
         for i in range(0, len(encrypted), 4):
             enc_string = encrypted[i: i + 4]
@@ -448,13 +443,18 @@ def tcp_receive(listen_on, listen_port):
                 print("         inserting _ at position of this character")
                 message += "_"
 
-        print(message)
+        print("Finished decoding: ", message)
         f.write(message)
         f.close()
         print("closing connection")
         c.send('A'.encode())
         listen = False
+
+        get_n_bytes(c, 2)
+        get_n_bytes(c, 2)
+        c.send("Q".encode())
         s.close()
+
 
 def tcp_send(server_host, server_port):
     """
@@ -462,14 +462,12 @@ def tcp_send(server_host, server_port):
     - Receive a one-character response from the 'server'
     - Print the received response
     - Close the socket
-
     :param str server_host: name of the server host machine
     :param int server_port: port number on server to send to
     """
     print('tcp_send: dst_host="{0}", dst_port={1}'.format(server_host, server_port))
     tcp_socket = socket(AF_INET, SOCK_STREAM)
     tcp_socket.connect((server_host, server_port))
-
     n_length = int.from_bytes(tcp_socket.recv(2), "big")
     n = int.from_bytes(tcp_socket.recv(n_length), "big")
 
@@ -517,6 +515,7 @@ def get_n_bytes(com, n):
     while len(data) < n:
         data += com.recv(1)
     return data
+
 
 if __name__ == "__main__":
     main()
